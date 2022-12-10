@@ -35,27 +35,6 @@ for line in book:
     i += 1
 
 
-""" 임시 """
-payload_txt = ''
-for i in range(1, len(chapter_index)):
-    chapter_sum = []    
-    
-    n = 1
-    flag = True
-    while flag:
-        ind_start = chapter_index[i-1] + 1 + (n-1) * 100
-        ind_end = ind_start + n * 100
-        # print(ind_start, ind_end)
-        if ind_end > chapter_index[i]:
-            ind_end = chapter_index[i]
-            flag = False
-        list_chapter_txt = book[ind_start:ind_end]
-        
-        payload_txt = ' '.join(list_chapter_txt)       
-        
-        print(f"{ind_start} -- {ind_end}")
-        n += 1
-
 
 """ 모델 생성 """
 NAME = "SciTLDR-FullText"
@@ -73,28 +52,17 @@ if torch.cuda.is_available():
 bart.eval()
 
 # hyper-parameter
-beam = 6
-lenpen = 1.0
-max_len_b = 300
-min_len = 100
-no_repeat_ngram_size = 3
-
+beam = 2 #2
+lenpen = 0.4 #0.4
+no_repeat_ngram_size = 3 #3
+max_len_b = 1000 #50
+min_len = 10 #5
+STEP = 1000
 
 
 datadir = path + f"\\SciTLDR-Data\\{NAME}"
 source_fname = join(datadir, 'test.source')
 pred_fname = join(path + '\\outputs', str(np.ceil(time())))
-# hypotheses_batch = None
-# with open(source_fname, encoding="utf-8") as source:
-#     sline = source.readline().strip()
-#     slines = [sline]
-#     hypotheses_batch = bart.sample(slines, beam=beam, 
-#                                                 lenpen=lenpen, 
-#                                                 max_len_b=max_len_b,
-#                                                 min_len=min_len,
-#                                                 no_repeat_ngram_size=no_repeat_ngram_size)
-
-
 
 def get_summarization(payload):
     hypotheses_batch = bart.sample(payload, beam=beam, 
@@ -105,7 +73,6 @@ def get_summarization(payload):
     print(hypotheses_batch)
     return hypotheses_batch
 
-txt = get_summarization(payload_txt)
 
 
 """ 실행 구문 """
@@ -117,8 +84,8 @@ for i in range(1, len(chapter_index)):
     n = 1
     flag = True
     while flag:
-        ind_start = chapter_index[i-1] + 1 + (n-1) * 100
-        ind_end = ind_start + n * 100
+        ind_start = chapter_index[i-1] + 1 + (n-1) * STEP
+        ind_end = ind_start + n * STEP
         # print(ind_start, ind_end)
         if ind_end > chapter_index[i]:
             ind_end = chapter_index[i]
@@ -126,6 +93,8 @@ for i in range(1, len(chapter_index)):
         list_chapter_txt = book[ind_start:ind_end]
         
         payload_txt = ' '.join(list_chapter_txt)       
+
+        payload_txt = re.sub('\\n', ' ', payload_txt)
 
         chapter_sum = get_summarization(payload_txt)
         
