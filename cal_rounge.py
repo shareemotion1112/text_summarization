@@ -23,6 +23,37 @@ from multiprocessing.pool import Pool
 from pathlib import Path
 
 
+"""
+    file2rouge 설치 
+    pip install -U git+https://github.com/pltrdy/pyrouge
+
+    git clone https://github.com/pltrdy/files2rouge.git     
+    cd files2rouge
+    python setup_rouge.py
+    python setup.py install
+
+
+    Rouge Score란?
+        Recall-Oriented Understudy for Gisting Evaluation
+
+        label(사람이 만든 요약문)과 summary(모델이 생성한 inference)을 비교해서 성능 계산
+
+        ROUGE-N, ROUGE-L, ROUGE-W, ROUGE-S 등 다양한 지표가 있음
+
+        각각 지표별로 recall 및 precision을 둘 다 구하는 것이 도움이 됨(기반하여 F1 score로 측정 가능)
+
+        Recall : label을 구성하는 단어 중 몇개가 inference와 겹치는가?
+
+        우선적으로 필요한 정보들이 다 담겨있는지 체크
+        precision : inference를 구성하는 단어 중 몇개가 label과 겹치는가?
+
+        요약된 문장에 필요한 정보만을 얼마나 담고있는지를 체크
+
+        출처 : https://velog.io/@crosstar1228/NLPRouge-score-Summarization%EC%9D%98-%ED%8F%89%EA%B0%80-Metric
+
+"""
+
+
 def filter_rouge(output_string):
     reg = "ROUGE-(1|2|L) Average_(R|P|F): (\d.\d+)"
     lines = output_string.split('\n')
