@@ -7,8 +7,8 @@ from tqdm import tqdm
 import os
 from os.path import join
 import logging
-import time
-
+from time import time
+import numpy as np
 
 
 path = os.path.dirname(os.path.realpath('__file__'))
@@ -36,6 +36,7 @@ for line in book:
 
 
 """ 임시 """
+payload_txt = ''
 for i in range(1, len(chapter_index)):
     chapter_sum = []    
     
@@ -57,25 +58,54 @@ for i in range(1, len(chapter_index)):
 
 
 """ 모델 생성 """
-checkpoint_dir = path + '\\pretrained_model'
-os.chdir(checkpoint_dir)
-model_file = 'scitldr_bart-xsum.tldr-aic.pt'
-# checkpoint_dir_replaced = re.sub("\\\\", '//', checkpoint_dir)
-with open('payload.txt', 'wt', encoding='UTF-8') as f:
-    f.writelines(payload_txt)
+NAME = "SciTLDR-FullText"
+pp = path + f"\\SciTLDR-Data\\{NAME}-bin"
+checkpoint_file = path + '\\pretrained_model\\scitldr_bart-xsum.tldr-aic.pt'
+checkpoint_dir = path + '\\checkpoints'
 
 
-bart = BARTModel.from_pretrained(checkpoint_dir, checkpoint_file=model_file, task='translation')
+bart = BARTModel.from_pretrained(checkpoint_dir, checkpoint_file=checkpoint_file, data_name_or_path = pp, task='translation')
+
+if torch.cuda.is_available():
+    bart.cuda()
+    bart.half()
+
+bart.eval()
+
+# hyper-parameter
+beam = 6
+lenpen = 1.0
+max_len_b = 300
+min_len = 100
+no_repeat_ngram_size = 3
 
 
 
+datadir = path + f"\\SciTLDR-Data\\{NAME}"
+source_fname = join(datadir, 'test.source')
+pred_fname = join(path + '\\outputs', str(np.ceil(time())))
+# hypotheses_batch = None
+# with open(source_fname, encoding="utf-8") as source:
+#     sline = source.readline().strip()
+#     slines = [sline]
+#     hypotheses_batch = bart.sample(slines, beam=beam, 
+#                                                 lenpen=lenpen, 
+#                                                 max_len_b=max_len_b,
+#                                                 min_len=min_len,
+#                                                 no_repeat_ngram_size=no_repeat_ngram_size)
 
 
 
+def get_summarization(payload):
+    hypotheses_batch = bart.sample(payload, beam=beam, 
+                                    lenpen=lenpen, 
+                                    max_len_b=max_len_b,
+                                    min_len=min_len,
+                                    no_repeat_ngram_size=no_repeat_ngram_size)
+    print(hypotheses_batch)
+    return hypotheses_batch
 
-
-
-
+txt = get_summarization(payload_txt)
 
 
 """ 실행 구문 """
@@ -96,6 +126,8 @@ for i in range(1, len(chapter_index)):
         list_chapter_txt = book[ind_start:ind_end]
         
         payload_txt = ' '.join(list_chapter_txt)       
+
+        chapter_sum = get_summarization(payload_txt)
         
         print(f"{ind_start} -- {ind_end}")
         n += 1
