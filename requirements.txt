@@ -1,0 +1,11 @@
+greenlet
+torch
+tqdm
+cffi
+Cython
+numpy
+regex
+requests
+pysbd
+fairseq
+pandas
