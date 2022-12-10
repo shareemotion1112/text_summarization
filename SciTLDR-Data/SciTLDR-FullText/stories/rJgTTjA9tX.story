@@ -1,0 +1,465 @@
+There has been a large amount of interest, both in the past and particularly recently, into the relative advantage of different families of universal function approximators, for instance neural networks, polynomials, rational functions, etc.
+
+However, current research has focused almost exclusively on understanding this problem in a worst case setting: e.g. characterizing the best L1 or L_{infty} approximation in a box (or sometimes, even under an adversarially constructed data distribution.)
+
+In this setting many classical tools from approximation theory can be effectively used.
+
+
+
+However, in typical applications we expect data to be high dimensional, but structured -- so, it would only be important to approximate the desired function well on the relevant part of its domain, e.g. a small manifold on which real input data actually lies.
+
+Moreover, even within this domain the desired quality of approximation may not be uniform; for instance in classification problems, the approximation needs to be more accurate near the decision boundary.
+
+These issues, to the best of our knowledge, have remain unexplored until now.
+
+With this in mind, we analyze the performance of neural networks and polynomial kernels in a natural regression setting where the data enjoys sparse latent structure, and the labels depend in a simple way on the latent variables.
+
+We give an almost-tight theoretical analysis of the performance of both neural networks and polynomials for this problem, as well as verify our theory with simulations.
+
+Our results both involve new (complex-analytic) techniques, which may be of independent interest, and show substantial qualitative differences with what is known in the worst-case setting.
+
+The concept of representational power has been always of great interest in machine learning.
+
+In part the reason for this is that classes of "universal approximators" abound -e.g.
+
+polynomials, radial bases, rational functions, etc.
+
+Some of these were known to mathematicians as early as Bernstein and Lebesgue 1 -yet it is apparent that not all such classes perform well empirically.
+
+In recent years, the class of choice is neural networks in tasks as simple as supervised classification, and as complicated as reinforcement learning -inspiring an immense amount of theoretical study.
+
+Research has focus on several angles of this question, e.g. comparative power to other classes of functions (Yarotsky, 2017; Safran and Shamir, 2017; BID0 , the role of depth and the importance of architecture (Telgarsky, 2016; Safran and Shamir, 2017; BID6 , and many other topics such as their generalization properties and choice of optimization procedure BID7 Zhang et al., 2017; BID0 .Our results fall in the first category: comparing the relative power of polynomial kernels and ReLU networks -with a significant twist, that makes our results more relevant to real-life settings.
+
+The flavor of existing results in this subject is roughly the following: every function in a class C 1 can be approximately represented as a function in a different class C 2 , with some blowup in the size/complexity of the function (e.g. degree, number of nodes, depth).
+
+The unsatisfying aspect of such results is the "worst-case" way in which the approximation is measured: typically, one picks a domain coarsely relevant for the approximation (e.g. an interval or a box), and considers the L ∞ , L 2 , L 1 , . . .
+
+norm of the difference between the two functions on this domain.
+
+In some of the constructions (e.g. BID6 Safran and Shamir, 2017) ), the evaluation is even more adversarial: it's the mean-square error over a specially-designed measure.
+
+Instead, in practically relevant settings, it's reasonable to expect that approximating a predictor function well only on some "relevant domain" would suffice, e.g. near the prediction boundary or near a lower-dimensional manifold on which the data lives, as would be the case in settings like images, videos, financial data, etc.
+
+A good image classifier need not care about "typical" data points from the ∞ -ball, which mostly look like white noise.
+
+The difficulty with the above question is that it's not immediate how to formalize what the "relevant domain" is or how to model the data distribution.
+
+We tackle here a particularly simple (but natural) incarnation of this question: namely, when the data distribution has sparse latent structure, and all we ask is to predict a linear function of the latent variables based upon (noisy) observations.
+
+The assumption of sparsity is very natural in the context of realistic, high-dimensional data: sparsity under the correct choice of basis is essentially the reason that methods such as lossy image compression work well, and it is also the engine behind the entire field of compressed sensing BID5 .
+
+We will be considering a regression task where the data has a sparse latent structure.
+
+More precisely, we wish to fit pairs of (observables, labels) (X, Y ) generated by a (latent-variable) process:• Sample a latent vector Z ∈ R m from H, where H is a distribution over sparse vectors.• To produce X ∈ R n , set X = AZ + ξ, where the noise ξ ∼ subG(σ 2 ) is a subgaussian random vector with variance proxy σ 2 (e.g. N (0, σ 2 I)).• To produce Y ∈ R, we set Y = w, Z .We hope the reader is reminded of classical setups like sparse linear regression, compressive sensing and sparse coding: indeed, this distribution on the data distribution X is standard in these setups.
+
+In our setting, we additionally attach a regression task to this data distribution, wherein the labels Y are linearly generated 2 by a predictor w from the latent vector Z.Note our interest is slightly different than usual: in the traditional setup, we are interested in the statistical/algorithmic problem of inferring Z, given X as input (the former studying the optimal rates of "reconstruction" for Z, the latter efficient algorithms for doing so).
+
+In particular, we do not typically care about the particular form of the predictor as long as it is efficiently computable.
+
+By contrast, we want to understand how well different subsets of universal approximator families can fit the data points (X, Y ).
+
+Namely, regardless of the specifics of the training procedure, the end will be an element of some function class like a linear function of a kernel embedding of X, or a neural network.
+
+Therefore, we ask if these classes are rich enough to reconstruct Y given X accurately (i.e. compared to the Bayes-optimal estimator E[Y |X]): if the answer is negative, then we know our predictor will perform poorly, no matter the training method.
+
+We measure the performance of these estimators in the natural 3 distributional sense: expected reconstruction error, DISPLAYFORM0 .
+
+Informally, what we will show is the following.
+
+Theorem (Informal).
+
+For the problem of predicting Y given X in the generative model for data described above, it holds that:(1) Small two-layer ReLU networks achieve close to the statistically optimal rate.
+
+(2) Polynomial predictors of degree lower than log m achieve a statistical rate which is substantially worse.
+
+(In fact, in a certain sense, close to "trivial".)
+
+Conversely, polynomial predictors of degree O((log n)2 ) achieve close to the statistically optimal rate.
+
+The lower bound in (2) is relevant since fitting a polynomial to data points of the form (x i , y i ) requires 4 searching through the space of multivariate polynomials of degree Ω(log m) which has dimension m Ω(log(m)) , and thus even writing down all of the variables in this optimization problem takes super-polynomial time.
+
+Practical aspects of using polynomial kernels even with much lower degree than this have been an important concern and topic of empirical research; see for example BID2 and references within.
+
+On the other hand, the upper bound in (2) shows that our analysis is essentially tight: greater than polylog(m) degree is not required to achieve good statistical performance, which is qualitatively different from the situation in worst-case analyses (see Section 4.2.2 for more details).
+
+Our mathematical analysis closely matches the observed behavior in experiments: see Section 6.For formal statements of the theorems, see Section 4.
+
+There has been a large body of work studying the ability of neural networks to approximate polynomials and various classes of well-behaved functions, such as recent work (Yarotsky, 2017; Safran and Shamir, 2017; BID0 Poggio et al., 2017) .
+
+These results exclusively focus on the worst-case setting where the goal is to find a network close to some function in some norm (e.g. L ∞ or L 1 -norm, often under an adversarially chosen measure).In contrast there is little work on the problem of approximating ReLU networks by polynomials, mostly because it is well-known by classical results of approximation theory (Newman et al., 1964; BID3 ) that polynomials of degree Ω(1/ ) are required to approximate even a single ReLU function within error in L ∞ -norm on [−1, 1].
+
+On the other hand, we will show that if we do not seek to achieve -error everywhere for the ReLU (in particular not near the nonsmooth point at 0) we can build good approximations to ReLU using polynomials of degree only O(log 2 (1/ )) (see discussion in Section 4.2.2 and Theorem 5.2).Because of the trivial Ω(1/ ) lower bound for worst-case approximation of ReLU networks by polynomials, BID0 studied the related problem of approximating a neural network by rational functions. (A classical result of approximation theory (Newman et al., 1964) shows that rational functions of degree O(log 2 (1/ )) can get within -error of the absolute value function.)
+
+In particular, BID0 shows that rational functions of degree polylog(1/ ) can get within distance in L ∞ -norm of bounded depth ReLU neural networks.
+
+Somewhat related is also the work of BID8 who considered neural networks with quadratic activations and related their expressivity to that of sigmoidal networks in the depth-2 case building on results of (Shalev-Shwartz et al., 2011) for approximating sigmoids.
+
+The result in (Shalev-Shwartz et al., 2011) is also proved using complex-analytic tools, though the details are substantially different.
+
+The work of (Zhang et al., 2016 ) studied the power of kernel regression methods to simulate a certain class of neural networks.
+
+More precisely, they bounded the 2 norm of kernel regression models approximating neural networks with bounded depth, "nice" activation functions (not including ReLU), and small input and edge weights.
+
+By standard generalization theory, this gives a corresponding sample complexity result for improper learning via kernels.
+
+In our setting, their result does not apply: first, the network of interest has ReLU activations; even ignoring this issue, their bounds would be roughly exponential in n because the 2 norm of the network's input vector is large, of order Θ(σ √ n).
+
+There is a vast literature on high dimensional regression and compressed sensing which we do not attempt to survey, since the main goal of our paper is not to develop new techniques for sparse regression but rather to analyze the representation power of kernel methods and neural networks.
+
+Some relevant references for sparse recovery can be found in (Vershynin, 2018; Rigollet, 2017) .
+
+We only emphasize that the upper bound via soft thresholding we show (Theorem 4.1) is implicit in the literature on high-dimensional statistics; we include the proofs here solely for completeness.
+
+In this section we will give formal statements of the results and give some insight into the techniques used.
+
+First, we state the assumptions on the parameters of our generative model:• Z is sparse: more precisely, |supp(Z)| ≤ k and Z 1 ≤ M with high probability.
+
+• A is a µ-incoherent n × m matrix, which means that A A − I ∞ ≤ µ for some µ ≥ 0.• w ∞ = 1 (w.l.o.g., since changing the magnitude of w rescales Y )The assumption on A is standard in the literature on sparse recovery (see reference texts (Rigollet, 2017; Moitra, 2018) ).
+
+In general one needs an assumption like this (or a stronger one, such as the RIP property) in order to guarantee that standard algorithms such as LASSO actually work for sparse recovery.
+
+For the reader not familiar with this literature, this property is a proxy for the matrix being "random-like" -e.g.
+
+a matrix with i.i.d.
+
+entries of the form ±1/ √ n has µ = O(1/ √ n), even when m >> n. We also note that for notational convenience, we will denote A ∞ = max i,j |A i,j |.Before proceeding to the results, we note that the first-time reader may freely assume that µ = 0 and n = m; the results are still interesting in this setting and no important technical idea is needed for the more general case.
+
+For the upper bounds, we have included results for the more general setting (with µ ≥ 0) to show that our results are relevant even to very high-dimensional settings where m >> n. We have only proven the lower bound in the case µ = 0: this is the easiest setting for algorithms, so this makes the lower bounds the strongest.
+
+We prove the following theorem, which shows that small 2-layer ReLU networks can achieve an almost optimal statistical rate.
+
+Let us denote the soft threshold function with threshold τ as ρ τ (x) := sgn(x) min(0, |x| − τ ) = ReLU(x − τ ) − ReLU(−x + τ ).
+
+Let's introduce the notation ρ ⊗m τ to denote the map given by applying ρ τ coordinate-wise to a vector in R m .
+
+Consider the following estimator (for y), corresponding to a 2-layer neural network: DISPLAYFORM0 We can prove the following result for the estimator (see Appendix A of the supplement):Theorem 4.1 (2-layer ReLU).
+
+With high probability, the estimatorŶ N N satisfies DISPLAYFORM1 Notice that the size of the ReLU net is comparable to the input: one of the layers has the same dimension as A, the other the same dimension as w. Furthermore, to interpret this result, recall that we think of µ as quite small -in particular µ 1.
+
+Thus the error of the estimator is essentially O(σ 2 k 2 log(m)), i.e. essentially |σ| error "per-nonzero-coordinate".
+
+It can be shown that this upper bound is nearly information-theoretically optimal (see Remark B.1), except that there is an additional factor of k. This additional factor is artificial and can be removed with added technical effort; we show how to do this in the µ = 0 case in Theorem A.1.We emphasize that the analysis of this kind of soft thresholding estimator is implicit in much of the literature on sparse linear regression.
+
+For completeness, we include a complete and self-contained proof of Theorem 4.1 in Section A.
+
+We first show that polynomials of degree smaller than O(log m) essentially cannot achieve a "nontrivial" statistical rate.
+
+This holds even in the easiest case for the dictionary A: when it's the identity matrix.
+
+More precisely, we consider the situation in which A is an orthogonal matrix (i.e. µ = 0, m = n), w ∈ {±1} m , the noise distribution is Gaussian N (0, σ 2 I), and the entries of Z are independently 0 with probability 1 − k/m and N (0, γ 2 ) with probability k/m.
+
+Then we show Theorem 4.2.
+
+Suppose k < m/2 and f is a multivariate degree d polynomial.
+
+Then DISPLAYFORM0 To parse the result, observe that the numerator is of order γ 2 k which is the error of the trivial estimator 7 and the denominator is close to 1 unless d is sufficiently large with respect to m. More precisely, assuming the signal-to-noise ratio γ/σ does not grow too quickly with respect to m, we see that the denominator is close to 1 unless DISPLAYFORM1 .
+
+On a technical note we observe that this statement is given with respect to expectation but a similar one can be made with high probability, see Remark B.2.
+
+The lower bound of the previous section leaves open the possibility that polynomials of degree O(polylog(m)) still do not suffice to perform sparse regression and solve our inference problem; Indeed, it is a well-known fact (see e.g. BID0 ) that to approximate a single ReLU to -closeness in infinity norm in [−1, 1] requires polynomials of degree poly(1/ ); this follows from standard facts in approximation theory BID3 since ReLU is not a smooth function.
+
+Proceeding with this "worst-case" way of thinking: our upper bound follows by designing a polynomial approximation to ReLU into our neural network construction; since estimates for Y typically accumulate error from estimating each of the m coordinates of Z, to guarantee accurate reconstruction we would need m to be small.
+
+Plugging in the the best approximation to ReLU in infinity norm, we would need a Ω( √ m)-degree polynomial for this to yield a multivariate polynomial with similar statistical performance to the 2-layer ReLU network which computesŶ N N .
+
+Thus, naively, we might suspect that the degree of the kernel needs to be as high as √ m to get a reasonable approximation.
+
+Surprisingly, we show this intuition is incorrect!
+
+In fact, we show how using only a polylog(m) degree polynomial, our converted ReLU network has similar statistical performance.
+
+Formally this is summarized by the following theorem, whereŶ d,M is the corresponding version ofŶ N N formed by replacing each ReLU by our polynomial approximation.
+
+DISPLAYFORM0 With high probability, the estimatorŶ d,M satisfies DISPLAYFORM1 7 I.e. the estimator which always returns 0, without looking at the data.
+
+8 As in Theorem 4.1, there is a spurious factor of k in this bound which can be removed with additional technical effort.
+
+In particular in the µ = 0 case we can remove it using the same argument as Theorem A.1; details are omitted.
+
+The idea behind our construction is described in Section 5.3.
+
+Our methods are novel and may be of independent interest; we are not aware of a way to get this result using only generic techniques such as FT-Mollification BID4 .
+
+In this section, we will sketch the ideas behind the proofs of our results.
+
+The full proofs are relegated to the appropriate appendices.
+
+We proceed with each of our results in turn.
+
+As previously mentioned, this kind of result is well-known in the literature on sparse regression and we include a proof primarily for completeness.
+
+The intuition is simple: the estimatorẐ N N can make use of the non-linearity in the soft threshold to zero out the coordinates in the estimate A X which are small and thus "reliably" not in the support of the true z. Thus, the estimator only makes mistakes on the non-zero coordinates.
+
+The full proofs are in Section A.
+
+The proof of Theorem 4.2 has two main ideas, which we detail below: (1) A structural lemma, which shows that the optimal predictor has a "decoupled" structure along the coordinates of the latent variable.(2) An analysis of this decoupled estimator using a bias-variance calculation in an appropriately chosen basis.
+
+The full proofs of this Section are in Appendix B.
+
+As explained above, our structural lemma shows that the optimal low-degree polynomial estimator decouples along the coordinates of the latent variable.
+
+In order to understand why this should be true, first observe that the optimal estimator for Y = w, Z given X has a particularly simple structure.
+
+Concretely, the optimal estimator is the conditional expectation E[ w, Z |X] = i w i E[Z i |X], so the optimal estimator for Y simply reconstructs Z as well as possible coordinate-wise, then takes an inner product with w.
+
+With this in mind, note the coordinates of Z are independent in our setting, so optimal estimation of Z i should not depend in any way on reconstructing Z j for j = i.
+
+This allows us to show that the optimal polynomial of degree d to estimate Y has no "mixed monomials" in an appropriate basis.
+
+This is the content of the next lemma, whose proof is in Appendix B. Lemma 5.1.
+
+Suppose X = AZ + ξ where A is an orthogonal m × m matrix, Z has independent entries and ξ ∼ N (0, σ 2 Id).
+
+Then there exists a unique minimizer f * d over all degree d polynomials f d of the square-loss, DISPLAYFORM0 and furthermore f * d has no mixed monomials.
+
+In other words, we can write f * DISPLAYFORM1
+
+Once we have reduced to considering estimators with decoupled structure, it becomes feasible to analyze the performance of all possible low degree polynomials using a bias-variance calculation in a carefully chosen basis.
+
+This is the second (and more involved) step in the proof.
+
+In order to perform the calculation, we need to apply Fourier analytic methods, so we need to switch to an orthonormal basis.
+
+Since the noise we chose for the lower bound instance is Gaussian 9 , a natural choice is the Hermite polynomials.
+
+We review the definition of the Hermite polynomials in Appendix B, but for the purposes of this proof overview, the Hermite polynomials are polynomials H n (x) indexed by multi-indices n ∈ N m 0 with the important property that they are orthogonal with respect to the standard m-variate Gaussian distribution, namely DISPLAYFORM0 From this, we can derive Plancherel's Theorem in this basis: DISPLAYFORM1 We use this theorem, along with the structural Lemma 5.1 to perform a bias-variance tradeoff analysis of any predictor: namely, we show (1) If the Fourier coefficients | f (n)| are large, then the estimator will be very sensitive to noise (i.e. has too high of a variance).(2) On the other hand, if | f (n)| is small and f is low-degree, then the estimator cannot match the correct mean well regardless of noise (i.e. has too high of a bias).Efficient application of Plancherel's theorem is key to proving both results: in the first case, we apply it over the randomness in the noise ξ, and in the second case, we apply it over the randomness in the latent vector Z, which has Gaussian entries conditioned on its support.
+
+Note that when f is sufficiently high-degree, it can effectively take advantage of the difference in scales between the noise and the signal to achieve both low bias and low variance simultaneously: see the following upper bound section for details.
+
+As previously mentioned, it's a result from classical approximation theory that no low-degree polynomial is close to the ReLU function on all of [−1, 1].
+
+The crux of these results is that it's hard to approximate ReLU well at 0, its point of non-smoothness.
+
+However, in our setting precisely approximating ReLU everywhere is not important for getting a good regression rate: instead, the approximation needs to be very close to 0 when the input is negative, and only very coarsely accurate otherwise.
+
+The reason for this is the intuition we described for 2-layer ReLU networks: the property of ReLU that is useful in this setting is it's "denoising" ability -the fact that it zeroes out negative inputs.
+
+Consequently, we design a polynomial approximation to ReLU of degree O(log 2 n) which sacrifices accuracy near the point of non-smoothness in favor of closeness to 0 in the negative region.
+
+More precisely, we prove the following theorem, in which the parameter τ in our theorem controls the trade-off between the polynomial p d being close to 0 for x < 0 and being close to x for x > 0.
+
+Theorem 5.2.
+
+Suppose R > 0, 0 < τ < 1/2 and d ≥ 7.
+
+Then there exists a polynomial DISPLAYFORM0 and for x ∈ [0, R], DISPLAYFORM1 The proof of this theorem proceeds in two steps:(1) First, one takes a "soft-max" mollification of ReLU of the form g β (x) := 1 β log(1 + e βx ) with an appropriately tuned β, so that g β is sufficiently close to ReLU.
+
+(2) Second, if β is not too large, we prove that the poles (in the complex plane) of the function g β are The full proofs are in Appendix C.
+
+Finally, we provide synthetic experiments to verify the predictions from Theorem 4.2 and Theorem 4.3.
+
+The setup is as follows: we generate a large synthetic data set (with n = m and µ = 0) in the following fashion:• A is a random orthogonal matrix and w is sampled from a n-dimensional standard Gaussian.• Z ∈ R n is sampled by including each coordinate with probability k/n, and sampling a standard Gaussian for each included coordinate.• X and Y are sampled according to the generative model in Section 2, using Gaussian noise with standard deviation σ.
+
+For each fixed degree, we fit a polynomial using least-squares regression, and evaluate the performance on a corresponding test set 10 generated in the same fashion (reusing the same A and w).
+
+Solving the regression problem for large degrees is intractable using standard training methods; to overcome this issue, we used structural observation in Lemma 5.1 to reduce the regression problem for estimating Y from X to that of estimating Z i given X i , which is a much lower dimensional problem.
+
+The results of the experiment are in FIG2 , graphed on a log scale.
+
+All experiments were run with k = 5 and σ = 0.06.
+
+We see that for low degrees, i.e. before our prediction error is close to the information-theoretic limit, the log-error decays roughly linearly with respect to polynomial degree.
+
+This matches the prediction of the lower bound in Theorem 4.2 after taking a log of the right-hand-side.
+
+For completeness, we also evaluate the baseline 2-Layer ReLU network described in Section 4.1 in the same experimental setup.
+
+Table 1 shows the test error of the baseline 2-Layer ReLU network and, for comparison, the best polynomial of degree 17 in the same experiment.
+
+Despite the high degree, the ReLU network is still slightly better.
+
+In this paper, we considered the problem of providing representation lower and upper bounds for different classes of universal approximators in a natural statistical setup that exhibits sparse latent structure.
+
+We hope this will inspire researchers to move beyond the worst-case setup when considering the representational power of different function classes.
+
+Figure 1: Degree vs Log L2 Error on test set for different values of n, the dimensionality of the problem.
+
+This plot was generated using a training set of 8000 examples from the generative model and a test set of 1000 additional examples; error is unnormalized.
+
+The techniques we develop are interesting in their own right: unlike standard approximation theory setups, we need to design polynomials which may only need to be accurate in certain regions.
+
+Conceivably, in classification setups, similar wisdom may be helpful: the approximator needs to only be accurate near the decision boundary.
+
+Finally, we conclude with a tantalizing open problem: In general it is possible to obtain non-trivial sparse recovery guarantees for LASSO even when the sparsity k is nearly of the same order as n under assumptions such as RIP.
+
+Since LASSO can be computed quickly using iterated soft thresholding (ISTA and FISTA, see Beck and Teboulle (2009)) , we see that sufficiently deep neural networks can compute a near-optimal solution in this setting as well.
+
+It would be interesting to determine whether shallower networks and polynomials of degree polylog(n) can achieve a similar guarantees.
+
+Ankur Moitra.
+
+We will first prove a bound on the error of the soft-thresholding estimatorẐ N N (Lemma A.2), which corresponds to the hidden layer of the neural network: this is essentially a standard fact in high-dimensional statistics (see reference text (Rigollet, 2017) ).
+
+The idea is that the soft thresholding will correctly zero-out most of the coordinates in the support while adding only a small additional error to the coordinates outside the support.
+
+From the recovery guarantee forẐ N N , we will then deduce Theorem 4.1.Towards proving the above result, we first need an estimate on the bias of A x, i.e. the error without noise: DISPLAYFORM0 Proof.
+
+We have DISPLAYFORM1 so applying the incoherence assumption we have DISPLAYFORM2 Using this we can analyze the error in thresholding.
+
+Lemma A.2.
+
+Suppose A is µ-incoherent i.e. A A − I ∞ ≤ µ. Let z be an arbitrary fixed vector such that z 1 ≤ M and |supp(z)| ≤ k. Suppose x = Az + ξ where ξ ∼ N (0, σ 2 I n×n ).
+
+Then for some τ = Θ(σ (1 + µ) log m + µM ) andẑ = ρ ⊗n τ (A x), with high probability we have ẑ − z ∞ ≤ 2τ and supp(ẑ) ⊂ supp(z).Proof.
+
+Observe that A x = z + (A A − I)z + A ξ.
+
+Note that entry i of A ξ is A i , ξ where A i 2 2 ≤ (1 + µ) so (A t ξ) i is subgaussian with variance proxy at most σ 2 (1 + µ).By concentration and union bound, with high probability all coordinates not in the true support are thresholded to 0.
+
+Similarly we see that for each of the coordinates in the support, an error of at most 2τ is made.
+
+From the above lemma, we can easily prove the main theorem of this section:Proof of Theorem 4.1.
+
+When the high probability above event happens, we have the following upper bound by Holder's inequality: DISPLAYFORM3 For the lower bounds we will be interested mostly in the case when µ = 0, i.e. A is orthogonal and so m = n, the coordinates of Z are independent and each is nonzero with probability at most k/n, and the noise is Gaussian.
+
+Then the error estimate we had in the previous theorem specializes to O(σ 2 k 2 log(n)), but under these assumptions we know that the information-theoretic optimal is actually σ 2 k log(n).
+
+While not very important to the flow of the paper, for completeness we can improve the analysis to eliminate the extra factor of k, without changing the algorithm: Theorem A.1.
+
+Suppose A is orthogonal (hence m = n), the coordinates of Z are independent, and ξ ∼ N (0, σ 2 I).
+
+Then DISPLAYFORM4 Proof.
+
+In this case, we have A X = Z + ξ where ξ ∼ N (0, σ 2 I).
+
+Therefore the coordinates ofẐ are independent of each other, and so we see DISPLAYFORM5 .
+
+DISPLAYFORM6 where the first inequality follows as in Lemma A.2, the second inequality uses that |ρ τ (x) − x| ≤ τ , the third uses that (a + b) 2 = a 2 + 2ab + b 2 ≤ 2a 2 + 2b 2 by Young's inequality, and the last inequality follows from standard tail bounds on Gaussians.
+
+We see the last expression is O(kσ 2 log(m)) so we have proved the result.
+
+In this section, prove the lower bounds for polynomial kernels.
+
+We recall the lower bound instance: the noise distribution is N (0, σ 2 Id) and the distribution for Z is s.t.
+
+every coordinate is first chosen to be non-zero with probability k/n, and if it is non-zero, it's set as an independent sample from N (0, γ 2 ).
+
+This construction makes Z approximately k-sparse with high probability while making its coordinates independent.
+
+We choose A as an arbitrary orthogonal matrix, so m = n. We choose w to be an arbitrary ±1 sign vector, so w 2 i = 1 for every i. As a warmup, we first show that linear predictors, and subsequently fixed low degree polynomials cannot achieve the information-theoretic rate 12 of O(σ 2 k log n) -in fact, we will show that they achieve a "trivial" rate.
+
+Furthermore, we will show that even if the degree of our polynomials is growing with n, if d = o(log n/ log log n) the state of affairs is similar.
+
+As a warmup, and to illustrate the main ideas of the proof techniques, we first consider the case of linear predictors. (i.e. kernels of degree 1.)The main idea is to use a bias-variance trade-off: namely, we show that the linear predictor we use, say f (x) = w, x either has to have too high of a variance (when w is large), or otherwise has too high of a bias. (Recall, the bias captures how well the predictor captures the expectation.)We prove: DISPLAYFORM0 Before giving the proof, let us see how the theorem should be interpreted.
+
+The trivial estimator which always returns 0 makes error of order γ 2 K and a good estimator (such as thresholding) should instead make error of order σ 2 K log n when γ >> σ √ log n.
+
+The next theorem shows that as long as the signal to noise ratio is not too high, more specifically as long as γ 2 (k/n) = o(σ 2 ), any linear estimator must make square loss of Ω(γ 2 k), i.e. not significantly better than the trivial 0 estimate.
+
+Note that the most interesting (and difficult) regime is when the signal is not too much larger than the noise, e.g. γ 2 = σ 2 polylog(n) in which case it is definitely true that γ 2 (k/n) << σ 2 .Proof.
+
+Note that w, x − y = w, Az + ξ − w, z = A w − w, z + w, ξ which gives the following bias-variance decomposition for the square loss: DISPLAYFORM1 where in the second-to-last step we used that the covariance matrix of Z is γ 2 (k/n)I, and in the last step we used that A is orthogonal.
+
+Now observe that if we fix R = w 2 , then by the Pythagorean theorem the minimizer of the square loss is given by the projection of Aw onto the R-dilated unit sphere, sow = R 2 /m(Aw) since Aw 2 = w 2 = √ m. In this case the square loss is then of the form DISPLAYFORM2 12 See Remark B.1 for why this is the optimal information-theoretic rate.
+
+and the risk is minimized when DISPLAYFORM3 so the minimum square loss is DISPLAYFORM4 B.2 STRUCTURE OF THE OPTIMAL ESTIMATOR: PROOF OF LEMMA 5.1Proof of Lemma 5.1.
+
+Let X = A X, so by orthogonality X = Z + ξ where ξ ∼ N (0, σ 2 Id).
+
+Observe that if we look at the optimum over all functions f , we see that DISPLAYFORM5 where where in the first step we used that the conditional expectation minimizes the squared loss, in the second step we used linearity of conditional expectation, and in the last step we used that Z i is independent of X =i .By the Pythagorean theorem, the optimal degree d polynomial f * d is just the projection of i w i E[Z i |X i ] onto the space of degree d polynomials.
+
+On the other hand observe that DISPLAYFORM6 is just the projection of each of the E[Z i |X i ].
+
+Therefore f * d has no mixed monomials.
+
+Remark B.1.
+
+The previous calculation shows additionally that the problem of minimizing the squared loss for predicting Y is equivalent to that of minimizing the squared loss for the sparse regression problem of recovering Z. It is a well-known fact that the information theoretic rate for sparse regression (with our normalization convention) is Θ(σ 2 k) (see for example (Rigollet, 2017) ), and so the information-theoretic rate for predicting Y is the same, and is matched by Theorem A.1.
+
+We recall that the lower bound for polynomials combines the observation of Lemma 5.1 with a bias-variance tradeoff calculation using Fourier analysis on orthogonal polynomials.
+
+Concretely, since the noise we chose for the lower bound instance is Gaussian, the most convenient basis will be the Hermite polynomals.
+
+We recall the probabilist's Hermite polynomial He n (x), defined by the recurrence relation DISPLAYFORM0 where He 0 (x) = 1, He 1 (x) = x. In terms of this, the normalized Hermite polynomial H n (x) is DISPLAYFORM1 It's easy to see the polynomials H n (x) form an orthogonal basis with respect to the standard m-variate Gaussian distribution.
+
+As a consequence, we get DISPLAYFORM2 which gives us Plancherel's theorem: DISPLAYFORM3 We can use Plancherel's theorem to get lower bounds on the noise sensitivity of degree d polynomials.
+
+This will be an analogue of the variance.
+
+DISPLAYFORM4 Proof.
+
+First we suppose Z (and thus Y ) is fixed and consider the randomness of the noise.
+
+Let S denote the support of Z. DISPLAYFORM5 so by expanding out f Z in terms of the fourier expansion of f , we see f Z (n) = f (n) for n such that supp(n) ⊂ S. Finally the probability n ⊂ S for n = 0 is upper bounded by the probability a single element of its support is in S, which is k/n.
+
+Therefore DISPLAYFORM6 which proves the result.
+
+Next we give a lower bound for the bias, showing that if f =0 2 2 is small for a low-degree polynomial, it cannot accurately predict y.
+
+Here we will assume f is of the form given by Lemma 5.1.
+
+Lemma B.2 (Low variance implies high bias).
+
+Suppose f is a multivariate polynomial of degree d with no mixed monomials, i.e. f (x) = i f i (x i ) where f i is a univariate polynomial of degree d. Expand f in terms of Hermite polynomials as f (x) = n f (n)H n (x/σ).
+
+Then DISPLAYFORM7 Before proving the lemma, let us see how it proves the main theorem:Proof of Theorem 4.2.
+
+By Lemma 5.1, Lemma B.1, and Lemma B.2 we have that for the f which minimizes the square loss among degree d polynomials, we have a variance-type lower bound DISPLAYFORM8 where the second equality is by the law of total expectation and the last inequality is Cauchy-Schwarz.
+
+Using the recurrence relation (1), we can bound the sum of the absolute value of the coefficients of DISPLAYFORM9 We can also bound the moments of the absolute value of a Gaussian by DISPLAYFORM10 Therefore by Holder's inequality DISPLAYFORM11 Therefore by reverse triangle inequality DISPLAYFORM12
+
+We make a few remarks regarding the results in this section.
+
+Recall that γ 2 k is the square loss of the trivial zero-estimator.
+
+Suppose as before that γ = Θ(σ 2 polylog(n)), then we see that if d = o(log n/ log log n) then the denominator of the lower bound tends to 1, hence any such polynomial estimator has a rate no better than that of the trivial zero-estimate.
+
+It is possible to derive a similar statement to Theorem 4.2 that holds with high probability instead of in expectation for polynomials of degree o(log n/ log log n).
+
+All that is needed is to bound the contribution to the expectation from very rare tail events when the realization of the noise ξ is atypically large.
+
+Since the polynomials we consider are very low degree o(log n/ log log n), they can only grow at a rate of x d = x o(log(n)/ log log n) ; thus standard growth rate estimates (e.g. the Remez inequality) combined with the Gaussian tails of the noise can be used to show that a polynomial which behaves reasonably in the high-probability region (e.g. which has small w.h.p.
+
+error) cannot contribute a large amount to the expectation in the tail region.
+
+In this section, we construct polynomials achieving close to the information-theoretic optimal rate of degree only O(log 2 m).
+
+Recall this is nearly optimal due to our previous lower bound of Ω(log n).As previously mentioned, the key technical result here will be Theorem 5.2, giving the construction of a new polynomial approximation to ReLU.
+
+Before proceeding to the proof of that theorem, we show how it implies the final result, Theorem 4.3.Towards that, we substitute our polynomial construction for ρ τ into our ReLU neural network and derive the analogous version of Lemma A.2.
+
+First, define M τ = M + 2τ and let DISPLAYFORM0 where p is the polynomial constructed in Theorem 5.2.
+
+We then have: DISPLAYFORM1 and for |x| ≤ τ we have DISPLAYFORM2 By the guarantee of Theorem 5.2, we see that for for |x| ≤ τ that DISPLAYFORM3 Thus we see that taking d = Ω( Mτ τ log 2 ( Mτ τ )) suffices to make the latter expression at most .
+
+Similarly for |x| > τ we know that DISPLAYFORM4 and taking d = Ω( Mτ τ log 2 (Mτ τ )) with sufficiently large constant guarantees the middle term is at most τ and the last term is at most .Using this, we can show that if we use a polynomial of degree Ω((M/σ √ log n) log 2 m) we can achieve similar statistical performance to the ReLu network: DISPLAYFORM5 , then with high probability we have ẑ − z 1 ≤ 6kτ .Proof.
+
+Apply Lemma C.1 with = τ /m.
+
+Then we see for |x| ∈ (τ, M τ ) we havn DISPLAYFORM6 and for |x| ≤ τ we have DISPLAYFORM7 Note that entry i of A ξ is A i , ξ where A i 2 2 ≤ (1 + µ) so (A t ξ)
+
+i is Gaussian with variance at most σ 2 (1 + µ).By choosing τ with sufficiently large constant, then applying the sub-Gaussian tail bound and union bound, with high probability all coordinates not in the true support are thresholded to at most τ /m.
+
+Similarly we see that for each of the coordinates in the support, an error of at most 5τ is made.
+
+Therefore ẑ − z 1 ≤ 5kτ + m(τ /m) ≤ 6kτ .
+
+Finally, we return to the proof of the key Theorem 5.2:Proof of Theorem 5.2.
+
+We start with the case where R = 1/2.
+
+We build the approximation in two steps.
+
+First we approximate ReLu by the following "annealed" version of ReLu, for parameters β > π, τ > 0 to be optimized later: DISPLAYFORM8 f β,τ (x) = g β (x − τ ).Observe that when we look at negative inputs, g β (−x) = For the second step,, we need to show f β can be well-approximated by low-degree polynomials.
+
+In fact, because f β is analytic in a neighborhood of the origin, it turns out that its optimal rate of approximation is determined exactly by its complex-analytic properties.
+
+More precisely, define D ρ to be the region bounded by the ellipse in C = R 2 centered at the origin with equation For our application we need only the upper bound and we need a quantitative estimate for finite n. Following the proof of the upper bound in (DeVore and Lorentz, 1993), we get the following result:Theorem C.2.
+
+Suppose f is analytic on the interior of D ρ1 and |f (z)| ≤ M on the closure of D ρ1 .
+
+Then DISPLAYFORM9 The proof is fairly simple: by writing f in terms of cos(x) one gets an expansion into Chebyshev polynomials and it suffices to bound the coefficients of the corresponding Fourier series: to do this, we write them as integrals over the unit circle, and use the analyticity assumption on D ρ1 to contour shift the integral to a different circle, which immediately gives us the desired exponential decay.
+
+For details see BID3 ).We will now apply this theorem to g β .
+
+First, we claim that g β is analytic on D ρ1 where ρ 1 is the solution to this equation for the semi-axis of the ellipse: DISPLAYFORM10 which is DISPLAYFORM11 To see this, first extend log to the complex plane by taking a branch cut at (−∞, 0].
+
+To prove g β is analytic on D ρ1 , we just need to prove that 1 + e βz avoids (−∞, 0] for z ∈ D ρ1 .
+
+This follows because by the definition of ρ 1 , for every z ∈ D ρ1 , (z) < π 2β hence (1 + e βz ) ≥ 1.
+
+We also see that for z ∈ D ρ1 , |g β (z)| = 1 β | log(1 + e βz )| ≤ 1 β sup w∈D βρ 1 | log(1 + e w )| ≤ 1 β (log(1 + e β ) + π) < 6.Therefore by Theorem C.2 we have DISPLAYFORM12 where in the last step we used that 1 + x ≥ exp(x/2) for x < 1/2 and that β > π.
+
+@highlight
+
+Beyond-worst-case analysis of the representational power of  ReLU nets & polynomial kernels  -- in particular in the presence of sparse latent structure.
